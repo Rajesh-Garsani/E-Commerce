@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">{{ category.name }}</h2>
+
+    <!-- Product Grid -->
+    <div class="row">
+        {% for product in products %}
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <!-- Product Image -->
+                    <a href="{% url 'product_detail' product.slug %}">
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                    </a>
+
+                    <!-- Product Body -->
+                    <div class="card-body text-center">
+                        <h5 class="card-title">
+                            <a href="{% url 'product_detail' product.slug %}" class="text-dark">
+                                {{ product.name }}
+                            </a>
+                        </h5>
+                        <p class="card-text text-danger fw-bold">${{ product.price }}</p>
+                    </div>
+
+                    <!-- Product Actions -->
+                    <div class="card-footer d-flex justify-content-center gap-2 bg-white">
+                        <a href="{% url 'add_to_cart' product.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                        </a>
+                        <a href="{% url 'place_order' %}" class="btn btn-sm btn-success">
+                            <i class="fas fa-check"></i> Order Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p class="text-center">No products found in this category.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
