@@ -12,12 +12,13 @@ class SignupForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ("email", "full_name", "phone", "password1", "password2")
+        fields = ("email", "password1", "password2")  # don't list full_name/phone here
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.username = self.cleaned_data["email"]   # use email as username
-        user.email = self.cleaned_data["email"]
+        email = self.cleaned_data["email"]
+        user.username = email  # use email as username
+        user.email = email
         if commit:
             user.save()
             UserProfile.objects.create(
@@ -26,6 +27,7 @@ class SignupForm(UserCreationForm):
                 phone=self.cleaned_data["phone"]
             )
         return user
+
 
 
 class LoginForm(AuthenticationForm):

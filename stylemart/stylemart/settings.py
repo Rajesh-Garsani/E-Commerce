@@ -19,24 +19,25 @@ INSTALLED_APPS = [
     'footer',
 ]
 
-# ================== SESSION SETTINGS ==================
-# Default session cookie (for normal users)
-SESSION_COOKIE_NAME = "sessionid"
-
-# Special cookie for admin sessions
-ADMIN_SESSION_COOKIE_NAME = "admin_sessionid"
-ADMIN_SESSION_PATH = "/admin"   # Only for admin site
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "core.middleware.SeparateAdminSessionMiddleware",  # 👈 Custom middleware
+    "core.middleware.PerPathSessionMiddleware",   # replaces SessionMiddleware
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# Default session cookie (user site)
+SESSION_COOKIE_NAME = "sessionid"
+
+# Separate cookie for admin site
+ADMIN_SESSION_COOKIE_NAME = "admin_sessionid"
+USER_SESSION_COOKIE_NAME = "sessionid"
+
+
 
 ROOT_URLCONF = 'stylemart.urls'
 
@@ -93,6 +94,8 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
 
 # ================== LOGIN/LOGOUT SETTINGS ==================
 LOGIN_URL = '/login/'

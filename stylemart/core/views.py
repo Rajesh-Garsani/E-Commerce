@@ -1,4 +1,3 @@
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
@@ -6,10 +5,10 @@ from django.contrib import messages
 from .models import Product, Category, Cart, Order, OrderItem, UserProfile
 from .forms import SignupForm, LoginForm
 
-from django.shortcuts import render
-from .models import OrderItem, Order
 
-# Home view: shows categories, featured and all products.
+
+
+
 def home(request):
     categories = Category.objects.all()
     featured_products = Product.objects.all()[:4]
@@ -50,6 +49,19 @@ def category_products(request, slug):
     category = get_object_or_404(Category, slug=slug)
     products = category.products.all()
     return render(request, "category_products.html", {"category": category, "products": products})
+
+
+
+
+def category_detail(request, slug):
+    category = get_object_or_404(Category, slug=slug)
+    products = Product.objects.filter(category=category)
+    return render(request, "category_detail.html", {
+        "category": category,
+        "products": products,
+    })
+
+
 
 # Signup view using custom SignupForm
 def signup_view(request):
@@ -110,27 +122,21 @@ def add_to_cart(request, product_id=None):
         messages.error(request, "Invalid request method.")
         return redirect("home")
 
-# View cart with totals
+
 @login_required
 def view_cart(request):
-    # Get the latest "open" order for the user (assuming you track status)
-    order = Order.objects.filter(user=request.user, status="cart").first()
+    cart_items = Cart.objects.filter(user=request.user).select_related('product')
 
-    if order:
-        cart_items = order.items.all()
-    else:
-        cart_items = []
-
-    # Calculate totals
+    # attach a total_price attribute per item for the template
     for item in cart_items:
         item.total_price = item.product.price * item.quantity
 
     total = sum(item.total_price for item in cart_items)
-
     return render(request, "cart.html", {
         "cart_items": cart_items,
         "total": total,
     })
+
 
 # Update cart item quantity or remove item (handles POST from cart page)
 @login_required
@@ -157,26 +163,31 @@ def update_cart_item(request):
                 messages.success(request, "Quantity updated.")
     return redirect("view_cart")
 
-# Checkout / place order view
+
 @login_required
 def place_order(request):
+    # Quick add (from product listing "Order Now" buttons)
+    if request.method == "POST" and 'full_name' not in request.POST and 'address' not in request.POST:
+        product_id = request.POST.get("product_id")
+        if product_id:
+            product = get_object_or_404(Product, id=product_id)
+            cart_item, created = Cart.objects.get_or_create(user=request.user, product=product)
+            if not created:
+                cart_item.quantity += 1
+                cart_item.save()
+            return redirect("place_order")  # show checkout page with cart items
+
     cart_items = Cart.objects.filter(user=request.user).select_related('product')
     if not cart_items.exists():
         messages.info(request, "Your cart is empty.")
         return redirect("home")
 
-    if request.method == "POST":
-        # Use checkout form fields to create the order
+    if request.method == "POST" and 'full_name' in request.POST:
         full_name = request.POST.get("full_name", "").strip()
         address = request.POST.get("address", "").strip()
         phone = request.POST.get("phone", "").strip()
 
-        # If user has profile and fields blank, try to fill
-        try:
-            profile = request.user.userprofile
-        except UserProfile.DoesNotExist:
-            profile = None
-
+        profile = getattr(request.user, "userprofile", None)
         if not phone and profile:
             phone = profile.phone or ""
         if not full_name and profile:
@@ -187,23 +198,15 @@ def place_order(request):
             phone=phone or "",
             address=address or ""
         )
-        # Add items
         for item in cart_items:
             OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity)
-        # Clear cart
         cart_items.delete()
         messages.success(request, "Order placed successfully.")
         return redirect("order_confirmation", order_id=order.id)
 
-    # GET: show checkout page
-    try:
-        profile = request.user.userprofile
-    except UserProfile.DoesNotExist:
-        profile = None
-
+    profile = getattr(request.user, "userprofile", None)
     return render(request, "place_order.html", {"cart_items": cart_items, "profile": profile})
 
-# Order confirmation
 @login_required
 def order_confirmation(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -215,3 +218,5 @@ def order_confirmation(request, order_id):
 def order_history(request):
     orders = Order.objects.filter(user=request.user).order_by("-created_at")
     return render(request, "order_history.html", {"orders": orders})
+
+

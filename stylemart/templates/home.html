@@ -18,13 +18,16 @@
 <div class="filters">
     <div class="filter-group">
         <label for="category">Category</label>
-        <select id="category">
-            <option value="all">All Categories</option>
-            {% for category in categories %}
-            <option value="{{ category.slug }}">{{ category.name }}</option>
-            {% endfor %}
-        </select>
+        <select id="category" onchange="if(this.value) { window.location.href=this.value; }">
+    <option value="">All Categories</option>
+    {% for category in categories %}
+    <option value="{% url 'category_detail' category.slug %}">{{ category.name }}</option>
+    {% endfor %}
+</select>
+
+
     </div>
+
 
     <div class="filter-group">
         <label for="sort">Sort By</label>
@@ -51,27 +54,35 @@
 <ul class="product-grid">
     {% for product in featured_products %}
     <li class="product-card">
-        {% if product.badge != 'NONE' %}
+        {% if product.badge and product.badge != 'NONE' %}
         <span class="product-badge">{{ product.badge }}</span>
         {% endif %}
+
         <a href="{% url 'product_detail' product.slug %}">
+            {% if product.image %}
             <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+            {% else %}
+            <img src="{% static 'images/placeholder.png' %}" alt="No image" class="product-image">
+            {% endif %}
         </a>
+
         <div class="product-info">
             <h3 class="product-title">
                 <a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a>
             </h3>
             <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+
             <div class="product-rating">
                 {% for i in "12345" %}
-                    {% if forloop.counter <= product.rating|add:"0.5"|floatformat:0 %}
+                    {% if forloop.counter <= product.rating|default:0|add:"0.5"|floatformat:0 %}
                         <i class="fas fa-star"></i>
                     {% else %}
                         <i class="far fa-star"></i>
                     {% endif %}
                 {% endfor %}
-                <span>({{ product.rating }})</span>
+                <span>({{ product.rating|default:"0" }})</span>
             </div>
+
             {% if product.old_price %}
             <h4 class="product-price">
                 <span style="text-decoration: line-through; color: var(--gray);">${{ product.old_price }}</span>
@@ -82,16 +93,15 @@
             {% endif %}
 
             <div class="product-actions">
-                {# Add to cart via POST form (contains data-id for frontend JS) #}
-                <form method="post" action="{% url 'add_to_cart' product.id %}" class="inline-form add-to-cart-form" style="display:inline;">
+                <!-- ✅ Add to Cart: POST form -->
+                <form method="post" action="{% url 'add_to_cart' product.id %}" style="display:inline;">
                     {% csrf_token %}
-                    <input type="hidden" name="product_id" value="{{ product.id }}">
-                    <button type="submit" class="btn btn-cart" data-id="{{ product.id }}">
+                    <button type="submit" class="btn btn-cart">
                         <i class="fas fa-shopping-cart"></i> Add to Cart
                     </button>
                 </form>
 
-                {# Quick Order: posts product_id to checkout flow (server-side should handle adding it to cart or quick-order) #}
+                <!-- ✅ Quick Order: POST to place_order -->
                 <form method="post" action="{% url 'place_order' %}" style="display:inline;">
                     {% csrf_token %}
                     <input type="hidden" name="product_id" value="{{ product.id }}">
@@ -113,27 +123,35 @@
 <ul class="product-grid">
     {% for product in all_products %}
     <li class="product-card">
-        {% if product.badge != 'NONE' %}
+        {% if product.badge and product.badge != 'NONE' %}
         <span class="product-badge">{{ product.badge }}</span>
         {% endif %}
+
         <a href="{% url 'product_detail' product.slug %}">
+            {% if product.image %}
             <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+            {% else %}
+            <img src="{% static 'images/placeholder.png' %}" alt="No image" class="product-image">
+            {% endif %}
         </a>
+
         <div class="product-info">
             <h3 class="product-title">
                 <a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a>
             </h3>
             <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+
             <div class="product-rating">
                 {% for i in "12345" %}
-                    {% if forloop.counter <= product.rating|add:"0.5"|floatformat:0 %}
+                    {% if forloop.counter <= product.rating|default:0|add:"0.5"|floatformat:0 %}
                         <i class="fas fa-star"></i>
                     {% else %}
                         <i class="far fa-star"></i>
                     {% endif %}
                 {% endfor %}
-                <span>({{ product.rating }})</span>
+                <span>({{ product.rating|default:"0" }})</span>
             </div>
+
             {% if product.old_price %}
             <h4 class="product-price">
                 <span style="text-decoration: line-through; color: var(--gray);">${{ product.old_price }}</span>
@@ -144,16 +162,15 @@
             {% endif %}
 
             <div class="product-actions">
-                {# Add to cart via POST form (contains data-id for frontend JS) #}
-                <form method="post" action="{% url 'add_to_cart' product.id %}" class="inline-form add-to-cart-form" style="display:inline;">
+                <!-- ✅ Add to Cart: POST form -->
+                <form method="post" action="{% url 'add_to_cart' product.id %}" style="display:inline;">
                     {% csrf_token %}
-                    <input type="hidden" name="product_id" value="{{ product.id }}">
-                    <button type="submit" class="btn btn-cart" data-id="{{ product.id }}">
+                    <button type="submit" class="btn btn-cart">
                         <i class="fas fa-shopping-cart"></i> Add to Cart
                     </button>
                 </form>
 
-                {# Quick Order: posts product_id to checkout flow #}
+                <!-- ✅ Quick Order: POST to place_order -->
                 <form method="post" action="{% url 'place_order' %}" style="display:inline;">
                     {% csrf_token %}
                     <input type="hidden" name="product_id" value="{{ product.id }}">

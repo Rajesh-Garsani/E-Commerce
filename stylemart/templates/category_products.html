@@ -1,42 +1,40 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4 text-center">{{ category.name }}</h2>
+{% load static %}
 
-    <!-- Product Grid -->
-    <div class="row">
-        {% for product in products %}
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <!-- Product Image -->
-                    <a href="{% url 'product_detail' product.slug %}">
-                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
-                    </a>
+<h2>{{ category.name }}</h2>
 
-                    <!-- Product Body -->
-                    <div class="card-body text-center">
-                        <h5 class="card-title">
-                            <a href="{% url 'product_detail' product.slug %}" class="text-dark">
-                                {{ product.name }}
-                            </a>
-                        </h5>
-                        <p class="card-text text-danger fw-bold">${{ product.price }}</p>
-                    </div>
+<div class="row">
+  {% for product in products %}
+  <div class="col-md-3 mb-4">
+    <div class="card">
+      {% if product.image %}
+      <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+      {% else %}
+      <img src="{% static 'images/placeholder.png' %}" class="card-img-top" alt="No image">
+      {% endif %}
+      <div class="card-body">
+        <h5 class="card-title">{{ product.name }}</h5>
+        <p class="card-text">${{ product.price|floatformat:2 }}</p>
 
-                    <!-- Product Actions -->
-                    <div class="card-footer d-flex justify-content-center gap-2 bg-white">
-                        <a href="{% url 'add_to_cart' product.id %}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-shopping-cart"></i> Add to Cart
-                        </a>
-                        <a href="{% url 'place_order' %}" class="btn btn-sm btn-success">
-                            <i class="fas fa-check"></i> Order Now
-                        </a>
-                    </div>
-                </div>
-            </div>
-        {% empty %}
-            <p class="text-center">No products found in this category.</p>
-        {% endfor %}
+        <!-- Fixed: Add to Cart POST form -->
+        <form method="post" action="{% url 'add_to_cart' product.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-primary">
+            <i class="fas fa-shopping-cart"></i> Add to Cart
+          </button>
+        </form>
+
+        <!-- Order Now -->
+        <form method="post" action="{% url 'place_order' %}" style="margin-top:8px;">
+          {% csrf_token %}
+          <input type="hidden" name="product_id" value="{{ product.id }}">
+          <button type="submit" class="btn btn-sm btn-success">Order Now</button>
+        </form>
+      </div>
     </div>
+  </div>
+  {% endfor %}
 </div>
+
 {% endblock %}

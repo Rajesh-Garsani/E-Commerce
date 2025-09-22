@@ -1,48 +1,34 @@
-{# templates/product_detail.html #}
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<div class="product-detail-container">
-  <div class="product-gallery">
-    <div class="main-image">
-      <img src="{{ product.image.url }}" alt="{{ product.name }}">
-    </div>
+
+
+<div class="row">
+  <div class="col-md-6">
+    {% if product.image %}
+    <img src="{{ product.image.url }}" class="img-fluid" alt="{{ product.name }}">
+    {% else %}
+    <img src="{% static 'images/placeholder.png' %}" class="img-fluid" alt="No image">
+    {% endif %}
   </div>
+  <div class="col-md-6">
+    <h2>{{ product.name }}</h2>
+    <p>{{ product.description }}</p>
+    <p><strong>Price:</strong> ${{ product.price|floatformat:2 }}</p>
 
-  <div class="product-info">
-    <h1>{{ product.name }}</h1>
+    <!-- Fixed: Add to Cart POST form -->
+    <form method="post" action="{% url 'add_to_cart' product.id %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-primary">Add to Cart</button>
+    </form>
 
-    <div class="product-meta">
-      {% if product.old_price %}
-        <span class="old-price">${{ product.old_price }}</span>
-      {% endif %}
-      <span class="current-price">${{ product.price }}</span>
-    </div>
-
-    <p class="product-description">{{ product.description }}</p>
-    <div class="product-rating">⭐ {{ product.rating }}</div>
-
-    <div class="product-actions">
-      {# Use POST form for add_to_cart (safer than GET anchor). Fallback to JS is supported. #}
-      <form method="post" action="{% url 'add_to_cart' product.id %}">
-        {% csrf_token %}
-        <input type="hidden" name="product_id" value="{{ product.id }}">
-        <button type="submit" class="btn btn-cart" name="action" value="add_to_cart">
-          <i class="fas fa-shopping-cart"></i> Add to Cart
-        </button>
-      </form>
-
-      <form method="post" action="{% url 'product_detail' product.slug %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-buy" name="action" value="order_now">
-          <i class="fas fa-check"></i> Order Now
-        </button>
-      </form>
-    </div>
-
-    <div class="product-category">
-      Category:
-      <a href="{% url 'category_products' product.category.slug %}">{{ product.category.name }}</a>
-    </div>
+    <!-- Order Now -->
+    <form method="post" action="{% url 'place_order' %}" style="margin-top:10px;">
+      {% csrf_token %}
+      <input type="hidden" name="product_id" value="{{ product.id }}">
+      <button type="submit" class="btn btn-success">Order Now</button>
+    </form>
   </div>
 </div>
+
 {% endblock %}

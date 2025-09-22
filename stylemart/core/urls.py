@@ -1,4 +1,3 @@
-
 from django.urls import path
 from . import views
 
@@ -8,7 +7,10 @@ urlpatterns = [
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
     path("product/<slug:slug>/", views.product_detail, name="product_detail"),
-    path("category/<slug:slug>/", views.category_products, name="category_products"),
+
+    # ✅ Only keep ONE category route
+    path("category/<slug:slug>/", views.category_detail, name="category_detail"),
+
     path("cart/add/<int:product_id>/", views.add_to_cart, name="add_to_cart"),
     path("cart/", views.view_cart, name="view_cart"),
     path("cart/update/", views.update_cart_item, name="update_cart_item"),

@@ -10,7 +10,8 @@
     <nav class="main-categories flex-grow-1">
       <ul>
         {% for category in categories %}
-          <li><a href="{% url 'category_products' category.slug %}">{{ category.name }}</a></li>
+          <li><a href="{% url 'category_detail' category.slug %}">{{ category.name }}</a></li>
+
         {% endfor %}
       </ul>
     </nav>
